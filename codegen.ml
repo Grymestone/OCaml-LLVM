@@ -7,6 +7,7 @@ exception Error of string
 
 type tvals = string * llvalue
 
+let con_stack = Stack.create ()
 let context = global_context ()
 let the_module = create_module context "awesome jit"
 let builder = builder context
@@ -118,7 +119,8 @@ and codegen_statement (s: statement) =
                    Hashtbl.add named_values n (t, a);
                  ) (params f);
             let the_function = f in 
-                 let bb = append_block context "entry" the_function in
+                 Stack.push context con_stack;
+                 let bb = append_block (Stack.top con_stack) "entry" the_function in
                  position_at_end bb builder;
 
                  try
@@ -133,7 +135,7 @@ and codegen_statement (s: statement) =
 
                    (* Validate the generated code, checking for consistency. *)
                    (*Llvm_analysis.assert_valid_function the_function;*)
-
+                   Stack.pop con_stack;
                    the_function
                  with e ->
                    delete_function the_function;
