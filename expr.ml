@@ -2,10 +2,10 @@
 type expr = 
   | Int of int
   | Double of float
-  | Assignment of string * expr
-  | MethodCall of string * expr list
-  | BinaryOperator of expr * string * expr
-  | Identifier of string
+  | Assignment of string * expr 
+  | MethodCall of string * expr list (* Call *)
+  | BinaryOperator of expr * string * expr (* Binary *)
+  | Identifier of string (* Variable *)
 
 type variableList = string * string * expr list 
 
@@ -14,6 +14,9 @@ type statement =
     | VariableDeclarationExpr of string * string * expr (* type, id, assignment expr *)
     | VariableDeclaration of string * string
     | FunctionDeclaration of string * string * statement list * statement list
+    (* | Prototype of string * string * string array *)
+
+(* type func = Function of statement * expr *)
 
 type block = statement list
 
@@ -32,7 +35,6 @@ and
       | MethodCall (s, el) -> Printf.printf " methodcall %s" s; print_expr_r el; print_newline ();
       | BinaryOperator (e, s, e2) -> print_expr e; Printf.printf  " %s " s; print_expr e2;
       | Identifier(s) -> Printf.printf " id(%s) " s
-
 and 
 
   print_statement (s: statement): unit =
@@ -41,6 +43,12 @@ and
       | VariableDeclarationExpr(a, b, e) -> Printf.printf "VarDecExpr: %s %s =" a b; print_expr e; print_newline ();
       | VariableDeclaration(a, b) -> Printf.printf "VarDec: %s %s" a b; print_newline ();
       | FunctionDeclaration(a, b, args, code) -> Printf.printf "FuncDec: %s %s\n" a b; Printf.printf "\targs:"; print_block_r args; Printf.printf "\n\tcode: "; print_block_r code; Printf.printf "\n";
+      (* | Prototype(a, s, sa) -> Printf.printf "Prototype %s %s" a; for i = 1 to Array.length sa do Printf.printf " String Array %s" (Array.get sa i) done   *)
+  (* and
+    print_func (f:func) : unit =
+      match f with
+      | Function(p, e) -> Printf.printf " Function"; print_expr e; print_statement p *)
+
   and 
   print_block_r (b:block): unit = 
     match b with

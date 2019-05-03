@@ -11,14 +11,3 @@ Declaring function do_math
 Setting variable x
 Operator *
 Variable a
-Operator +
- type LHS i32 type RHS i32
- type LHS i32 type RHS i32
-Setting variable y
-Operator +
-Variable b
- type LHS double type RHS double
-Added return 
-
-Calling function do_math
-
