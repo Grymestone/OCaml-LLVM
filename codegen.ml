@@ -51,7 +51,7 @@ let gen_ret (f: Llvm.llvalue ) (ft: Llvm.lltype) (args: Expr.statement list): Ll
                    let t,n = args.(i) in
                    set_value_name n a;
                    Hashtbl.add named_values n (t, a);
-                 ) (params f); f
+                 ) (params f); fe
 
 let rec codegen_expr (e: expr) =
     match e with
