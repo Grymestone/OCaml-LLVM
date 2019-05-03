@@ -7,7 +7,7 @@ exception Error of string
 
 type tvals = string * llvalue
 
-(* let con_stack = Stack.create () *)
+let con_stack = Stack.create ()
 let context = global_context ()
 let the_module = create_module context "awesome jit"
 let builder = builder context
@@ -38,8 +38,13 @@ let rec create_list_of_arg_names args=
             | _ -> failwith "not type in args?"
             )
 
-let gen_ret (f: Llvm.llvalue ) (ft: Llvm.lltype) (args: Expr.statement list): Llvm.llvalue = 
-        let fe = if block_begin f <> At_end f then
+let gen_ret (args: Expr.statement list) (name: string) = 
+        let arg = create_list_of_types args in
+        let ft = function_type double_type (Array.of_list arg) in
+        let f =
+                match lookup_function name the_module with
+                | None -> declare_function name ft the_module
+                | Some f -> if block_begin f <> At_end f then
                     raise (Error "redefinition of function");
                 if element_type (type_of f) <> ft then
                     raise (Error "redefinition of function with different # args");
@@ -51,7 +56,7 @@ let gen_ret (f: Llvm.llvalue ) (ft: Llvm.lltype) (args: Expr.statement list): Ll
                    let t,n = args.(i) in
                    set_value_name n a;
                    Hashtbl.add named_values n (t, a);
-                 ) (params f); fe
+                 ) (params f); f
 
 let rec codegen_expr (e: expr) =
     match e with
@@ -112,17 +117,18 @@ and codegen_statement (s: statement) =
             Hashtbl.add named_values n (t, expr_val);
             expr_val
     | FunctionDeclaration (t, name, args, code) -> 
-            (* Stack.push context con_stack; *)
+            Stack.push context con_stack;
             Printf.printf "Declaring function %s\n" name;
-            let arg = create_list_of_types args in
+            let f = gen_ret args name in
+            (* let arg = create_list_of_types args in
             let ft = function_type double_type (Array.of_list arg) in
             let f =
                 match lookup_function name the_module with
                 | None -> declare_function name ft the_module
                 | Some f -> gen_ret f ft args 
-            in
+            in *)
             let the_function = f in 
-                 let bb = append_block context "entry" the_function in
+                 let bb = append_block (Stack.top con_stack) "entry" the_function in
                  position_at_end bb builder;
                  (* position_builder (block_begin ) builder; *)
 
@@ -135,10 +141,10 @@ and codegen_statement (s: statement) =
                    (* Finish off the function. *)
                    let _ = build_ret ret_val builder in
                    Printf.printf "Added return \n";
-
+                
                    (* Validate the generated code, checking for consistency. *)
                    (* Llvm_analysis.assert_valid_function the_function; *)
-                   (* Stack.pop con_stack; *)
+                   Stack.pop con_stack;
                    the_function
                  with e ->
                    delete_function the_function;
